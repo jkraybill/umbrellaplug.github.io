@@ -756,6 +756,9 @@ def router(argv2):
 	elif action == 'trakt_Navigator':
 		from resources.lib.menus import navigator
 		navigator.Navigator().traktLists(folderName=folderName)
+	elif action == 'myTraktLists':
+		from resources.lib.menus import navigator
+		navigator.Navigator().myTraktLists(folderName=folderName)
 	####################################################
 	#---YouTube
 	####################################################

@@ -427,6 +427,42 @@ class Navigator:
 		if self.useContainerTitles: control.setContainerName(folderName)
 		self.endDirectory()
 
+	def myTraktLists(self, folderName=''):
+		if not self.traktCredentials:
+			from resources.lib.modules import control
+			control.notification(message='Trakt not authenticated')
+			return
+		import re
+		from resources.lib.database import traktsync
+		items = traktsync.fetch_user_lists('', True)
+		traktlist_link = 'https://api.trakt.tv/users/%s/lists/%s/items?limit=40&page=1'
+		for item in items:
+			try:
+				list_name = item['list_name']
+				list_owner = item['list_owner']
+				list_owner_slug = item['list_owner_slug']
+				list_id = item['trakt_id']
+				list_url = traktlist_link % (list_owner_slug, list_id)
+				list_count = item['item_count']
+				content_type = item['content_type']
+				if content_type == 'movies':
+					listAction = 'movies'
+				elif content_type == 'shows':
+					listAction = 'tvshows'
+				else:
+					listAction = 'mixed'
+				listAction = listAction + '&folderName=%s' % quote_plus(re.sub(r"[^a-zA-Z0-9 ]", "", list_name))
+				if getSetting('trakt.lists.showowner') == 'true':
+					label = '%s - [COLOR %s]%s[/COLOR] (%s)' % (list_name, self.highlight_color, list_owner, content_type)
+				else:
+					label = '%s (%s)' % (list_name, content_type)
+				self.addDirectoryItem(label, '%s&url=%s' % (listAction, quote_plus(list_url)), 'trakt.png', 'DefaultVideoPlaylists.png', queue=True)
+			except:
+				from resources.lib.modules import log_utils
+				log_utils.error()
+		if self.useContainerTitles: control.setContainerName(folderName if folderName else 'My Trakt Lists')
+		self.endDirectory()
+
 	def traktLists(self, lite=False, folderName=''):
 		self.addDirectoryItem(getLS(32001)+' - '+getLS(32417), 'movies_PublicLists&url=trakt_popularLists&folderName=%s' % quote_plus(getLS(32417)), 'trakt.png' if self.iconLogos else 'movies.png', 'DefaultMovies.png')
 		self.addDirectoryItem(getLS(32001)+' - '+getLS(32418), 'movies_PublicLists&url=trakt_trendingLists&folderName=%s' % quote_plus(getLS(32418)), 'trakt.png' if self.iconLogos else 'movies.png', 'DefaultMovies.png')
